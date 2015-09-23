@@ -1,27 +1,24 @@
-var Plugin = require('./index').Plugin;
-var meshblu = require('meshblu');
-var config = require('./meshblu.json');
+'use strict';
+var Connector     = require('./connector');
+var _             = require('lodash');
+var MeshbluConfig = require('meshblu-config');
+var meshbluConfig = new MeshbluConfig({});
 
-var conx = meshblu.createConnection({
-  server : config.server,
-  port   : config.port,
-  uuid   : config.uuid,
-  token  : config.token
-});
+var connector = new Connector(meshbluConfig.toJSON());
 
-conx.on('notReady', console.error);
-conx.on('error', console.error);
-
-var plugin = new Plugin();
-conx.on('message', function(){
-  try {
-    plugin.onMessage.apply(plugin, arguments);
-  } catch (error){
-    console.error(error.message);
+connector.on('error', function(error) {
+  if(!error){
+    console.error('an unknown error occured');
+    return;
+  }
+  if(_.isPlainObject(error)){
+    console.error(error);
+    return;
+  }
+  console.error(error.toString());
+  if(error.stack){
     console.error(error.stack);
   }
 });
 
-plugin.on('message', function(message){
-  conx.message(message);
-});
+connector.run();
